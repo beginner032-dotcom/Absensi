@@ -32,6 +32,7 @@ import {
   Database,
   CheckSquare,
   ArrowLeft,
+  MessageCircle,
 } from "lucide-react";
 import {
   getOrCreateSpreadsheet,
@@ -44,6 +45,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Html5Qrcode } from "html5-qrcode";
 import { QRCodeCanvas } from "qrcode.react";
+import QRCode from "qrcode";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -220,6 +222,53 @@ type SummaryData = {
 const DEFAULT_SPREADSHEET_URL =
   "https://docs.google.com/spreadsheets/d/1_aKE6MEZO7McVeBMPTxUFEvZp_MklHE8jPSzaxbJhvw/edit?gid=1418602897#gid=1418602897";
 
+const generateQRImageWithText = async (p: ParticipantInfo): Promise<string> => {
+  const qrDataUrl = await QRCode.toDataURL(p.id, { width: 400, margin: 2 });
+  
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const tempCanvas = document.createElement("canvas");
+      const padding = 40;
+      const textTopHeight = 100;
+      const textBottomHeight = 60;
+      
+      tempCanvas.width = img.width + padding * 2;
+      tempCanvas.height = img.height + padding * 2 + textTopHeight + textBottomHeight;
+      const ctx = tempCanvas.getContext("2d");
+      
+      if (ctx) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // Draw Top Text (Name and Instansi)
+        ctx.fillStyle = "#111827"; 
+        ctx.textAlign = "center";
+        ctx.font = "bold 32px sans-serif";
+        ctx.fillText(p.name, tempCanvas.width / 2, padding + 40);
+        
+        ctx.fillStyle = "#6b7280"; 
+        ctx.font = "24px sans-serif";
+        ctx.fillText(p.instansi, tempCanvas.width / 2, padding + 80);
+
+        // Draw QR code
+        ctx.drawImage(img, padding, padding + textTopHeight);
+        
+        // Draw Bottom Text (ID)
+        ctx.fillStyle = "#374151"; 
+        ctx.font = "bold 28px monospace";
+        ctx.fillText(p.id, tempCanvas.width / 2, tempCanvas.height - padding - 10);
+
+        resolve(tempCanvas.toDataURL("image/png"));
+      } else {
+        resolve(qrDataUrl); // Fallback to just QR code if canvas fails
+      }
+    };
+    img.onerror = () => resolve(qrDataUrl);
+    img.src = qrDataUrl;
+  });
+};
+
 export default function App() {
   const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
@@ -231,6 +280,7 @@ export default function App() {
   const [newInstansi, setNewInstansi] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterHadir, setFilterHadir] = useState<"Semua" | "Hadir" | "BelumHadir">("Semua");
 
   const [scanResult, setScanResult] = useState<{
     id: string;
@@ -454,17 +504,49 @@ export default function App() {
   };
 
   const renderPeserta = () => {
-    const filteredParticipants = (summary?.participants || []).filter(
-      (p) =>
+    const filteredParticipants = (summary?.participants || []).filter((p) => {
+      const matchQuery = 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.instansi.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+        p.instansi.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchStatus = 
+        filterHadir === "Semua" ? true :
+        filterHadir === "Hadir" ? p.status === "Hadir" :
+        p.status !== "Hadir";
+
+      return matchQuery && matchStatus;
+    });
+
+    const handleShareWhatsApp = async (p: ParticipantInfo) => {
+      const text = `Halo, ini adalah akses peserta untuk Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSilakan simpan QR Code ini dan tunjukkan saat kehadiran.`;
+      
+      try {
+        const dataUrl = await generateQRImageWithText(p);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `QR_${p.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'QR Code Peserta',
+            text: text,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Gagal generate/share QR", err);
+      }
+      
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank");
+    };
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50">
-          <div className="bg-white sticky top-0 z-20 px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm">
+          <div className="bg-white sticky top-0 z-20 px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <button
@@ -493,6 +575,23 @@ export default function App() {
                 className="w-full bg-gray-100 border-none rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
+            
+            <div className="flex space-x-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
+              {(["Semua", "Hadir", "BelumHadir"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilterHadir(tab)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors",
+                    filterHadir === tab
+                      ? "bg-gray-800 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  {tab === "Semua" ? "Semua" : tab === "Hadir" ? "Hadir" : "Belum Hadir"}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="p-4 space-y-3">
@@ -519,6 +618,13 @@ export default function App() {
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleShareWhatsApp(p)}
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition shadow-sm"
+                        title="Bagikan via WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => setSelectedQR(p)}
                         className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition shadow-sm"
@@ -699,6 +805,31 @@ export default function App() {
       (p) => p.status === "Hadir",
     );
 
+    const handleShareWhatsApp = async (p: ParticipantInfo) => {
+      const text = `Halo, terima kasih telah hadir di Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSemoga acara berjalan lancar dan bermanfaat bagi Anda.`;
+      
+      try {
+        const dataUrl = await generateQRImageWithText(p);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `QR_${p.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Terima Kasih Kehadiran',
+            text: text,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Gagal generate/share QR", err);
+      }
+      
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank");
+    };
+
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
@@ -736,9 +867,18 @@ export default function App() {
                     </div>
                   </div>
                   <div>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                      Hadir
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleShareWhatsApp(p)}
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition shadow-sm"
+                        title="Kirim pesan terima kasih via WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        Hadir
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))
@@ -758,6 +898,31 @@ export default function App() {
     const absentParticipants = (summary?.participants || []).filter(
       (p) => p.status !== "Hadir",
     );
+
+    const handleShareWhatsApp = async (p: ParticipantInfo) => {
+      const text = `Halo, mengingatkan Anda untuk menghadiri acara Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSampai jumpa di lokasi acara.`;
+      
+      try {
+        const dataUrl = await generateQRImageWithText(p);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `QR_${p.name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Pengingat Kehadiran',
+            text: text,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Gagal generate/share QR", err);
+      }
+      
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank");
+    };
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
@@ -796,9 +961,18 @@ export default function App() {
                     </div>
                   </div>
                   <div>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
-                      Belum Hadir
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleShareWhatsApp(p)}
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition shadow-sm"
+                        title="Ingatkan via WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
+                        Belum Hadir
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))
