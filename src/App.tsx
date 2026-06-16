@@ -170,7 +170,13 @@ const QrScanner = ({
       if (isScanning) {
         scanner
           .stop()
-          .then(() => scanner.clear())
+          .then(() => {
+            try {
+              scanner.clear();
+            } catch (e) {
+              // Ignore DOM removal errors if React already unmounted it
+            }
+          })
           .catch(console.error);
       }
     };
@@ -486,9 +492,9 @@ export default function App() {
                 Memuat data...
               </div>
             ) : filteredParticipants.length > 0 ? (
-              filteredParticipants.map((p) => (
+              filteredParticipants.map((p, idx) => (
                 <div
-                  key={p.id}
+                  key={`${p.id}-${idx}`}
                   className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
                 >
                   <div>
@@ -696,9 +702,9 @@ export default function App() {
 
           <div className="flex-1 p-4 space-y-3">
             {presentParticipants.length > 0 ? (
-              presentParticipants.map((p) => (
+              presentParticipants.map((p, idx) => (
                 <div
-                  key={p.id}
+                  key={`${p.id}-${idx}`}
                   className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
                 >
                   <div>
@@ -748,9 +754,9 @@ export default function App() {
 
           <div className="flex-1 p-4 space-y-3">
             {absentParticipants.length > 0 ? (
-              absentParticipants.map((p) => (
+              absentParticipants.map((p, idx) => (
                 <div
-                  key={p.id}
+                  key={`${p.id}-${idx}`}
                   className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
                 >
                   <div>
