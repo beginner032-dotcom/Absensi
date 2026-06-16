@@ -29,9 +29,8 @@ import {
   BarChart2,
   PieChart,
   TrendingUp,
+  Database,
 } from "lucide-react";
-import { initAuth, googleSignIn, logout, getAccessToken } from "./lib/firebase";
-import { User as FirebaseUser } from "firebase/auth";
 import {
   getOrCreateSpreadsheet,
   fetchSummary,
@@ -211,10 +210,6 @@ type SummaryData = {
 };
 
 export default function App() {
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-
   const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [loadingData, setLoadingData] = useState(false);
@@ -240,18 +235,7 @@ export default function App() {
   const [selectedQR, setSelectedQR] = useState<ParticipantInfo | null>(null);
 
   useEffect(() => {
-    const unsubscribe = initAuth(
-      (user, token) => {
-        setUser(user);
-        setNeedsAuth(false);
-        loadData();
-      },
-      () => {
-        setUser(null);
-        setNeedsAuth(true);
-      },
-    );
-    return () => unsubscribe();
+    loadData();
   }, []);
 
   const loadData = async () => {
@@ -269,48 +253,6 @@ export default function App() {
       setLoadingData(false);
     }
   };
-
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setUser(result.user);
-        setNeedsAuth(false);
-        loadData();
-      }
-    } catch (err) {
-      console.error("Login failed:", err);
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  if (needsAuth) {
-    return (
-      <div className="h-screen w-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-sm text-center max-w-sm w-full">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <QrCode className="w-8 h-8 text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-semibold mb-2">Akses Admin</h1>
-          <p className="text-gray-500 mb-8 text-sm">
-            Masuk untuk mengakses Dashboard dan mengelola kehadiran peserta.
-          </p>
-
-          <button
-            onClick={handleLogin}
-            disabled={isLoggingIn}
-            className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 p-3 rounded-full shadow-sm transition-colors disabled:opacity-50"
-          >
-            <span className="font-semibold text-white">
-              {isLoggingIn ? "Memproses..." : "Masuk Aplikasi"}
-            </span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const handleAddParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -817,52 +759,112 @@ export default function App() {
         </div>
 
         <div className="flex-1 p-6 space-y-6">
-          {user && (
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt="Profile"
-                  className="w-14 h-14 rounded-full shadow-sm"
-                />
-              ) : (
-                <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shadow-sm">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
-                </div>
-              )}
-              <div className="flex-1 overflow-hidden">
-                <h3 className="font-bold text-gray-900 truncate">
-                  {user.displayName || "User"}
-                </h3>
-                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
               Data & Kehadiran
             </h3>
 
-            <button
-              onClick={loadData}
-              className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
-                  <RefreshCw className="w-5 h-5" />
+                <div className="bg-purple-50 p-2 rounded-xl text-purple-600">
+                  <Database className="w-5 h-5" />
                 </div>
                 <div className="text-left">
                   <h4 className="font-semibold text-gray-900 text-sm">
-                    Muat Ulang Data
+                    Apps Script URL
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Sinkronkan data dengan Spreadsheet
+                    Integrasi Google Spreadsheet
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            </button>
+              <div className="flex flex-col space-y-2">
+                <input
+                  type="text"
+                  placeholder="https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  defaultValue={localStorage.getItem("APPS_SCRIPT_URL") || "https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec"}
+                  onBlur={(e) => {
+                    const value = e.target.value.trim();
+                    if (value) {
+                      localStorage.setItem("APPS_SCRIPT_URL", value);
+                    } else {
+                      localStorage.removeItem("APPS_SCRIPT_URL");
+                    }
+                    loadData();
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const script = `// Deploy this to Google Apps Script
+var SHEET_NAME_PESERTA = 'Peserta';
+var SHEET_NAME_KEHADIRAN = 'Kehadiran';
+
+function doPost(e) {
+  var output = { status: 'success' };
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet();
+    
+    if (payload.action === 'addParticipant') {
+      var ws = sheet.getSheetByName(SHEET_NAME_PESERTA) || sheet.insertSheet(SHEET_NAME_PESERTA);
+      if (ws.getLastRow() === 0) ws.appendRow(['ID', 'Nama', 'Instansi', 'Status']);
+      ws.appendRow([payload.data.id, payload.data.name, payload.data.instansi, 'Belum']);
+    } else if (payload.action === 'markAttendance') {
+      var ws = sheet.getSheetByName(SHEET_NAME_KEHADIRAN) || sheet.insertSheet(SHEET_NAME_KEHADIRAN);
+      if (ws.getLastRow() === 0) ws.appendRow(['ID_Peserta', 'Nama', 'Tanggal', 'Waktu Hadir']);
+      ws.appendRow([payload.data.id, payload.data.name, payload.data.date, payload.data.time]);
+    }
+  } catch(error) {
+    output = { status: 'error', message: error.toString() };
+  }
+  return ContentService.createTextOutput(JSON.stringify(output)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  if (e.parameter.action === 'getSummary') {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet();
+    var pSheet = sheet.getSheetByName(SHEET_NAME_PESERTA);
+    var kSheet = sheet.getSheetByName(SHEET_NAME_KEHADIRAN);
+    var peserta = []; var kehadiran = [];
+    if (pSheet && pSheet.getLastRow() > 1) {
+      var data = pSheet.getRange(2, 1, pSheet.getLastRow() - 1, 4).getValues();
+      for(var i=0; i<data.length; i++) peserta.push({ id: data[i][0], name: data[i][1], instansi: data[i][2] });
+    }
+    if (kSheet && kSheet.getLastRow() > 1) {
+      var data2 = kSheet.getRange(2, 1, kSheet.getLastRow() - 1, 4).getValues();
+      for(var j=0; j<data2.length; j++) kehadiran.push({ id: data2[j][0] });
+    }
+    
+    var kehadiranSet = new Set(kehadiran.map(function(k){ return k.id; }));
+    var resultParticipants = peserta.map(function(p) {
+       p.status = kehadiranSet.has(p.id) ? "Hadir" : "Belum";
+       return p;
+    });
+    
+    var present = resultParticipants.filter(function(p){ return p.status === "Hadir"; }).length;
+    var total = resultParticipants.length;
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      total: total, present: present, absent: total - present,
+      percentage: total === 0 ? 0 : parseFloat(((present/total)*100).toFixed(1)),
+      participants: resultParticipants
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput("OK");
+}`;
+                    navigator.clipboard.writeText(script);
+                    alert(
+                      "Kode Apps Script berhasil disalin! Buka Extensions > Apps Script di Spreadsheet Anda, paste kode ini, lalu Deploy sebagai Web App.",
+                    );
+                  }}
+                  className="text-xs font-semibold text-purple-600 bg-purple-50 rounded-lg py-2 hover:bg-purple-100 transition-colors"
+                >
+                  Salin Kode Apps Script
+                </button>
+              </div>
+            </div>
 
             <button
               onClick={() => {
@@ -915,12 +917,21 @@ export default function App() {
 
             <button
               onClick={() => {
-                logout();
+                if (
+                  confirm(
+                    "Reset seluruh data aplikasi? Ini tidak bisa dikembalikan.",
+                  )
+                ) {
+                  localStorage.clear();
+                  window.location.reload();
+                }
               }}
               className="w-full bg-red-50 p-4 rounded-2xl border border-red-100 shadow-sm flex items-center justify-center space-x-2 text-red-600 hover:bg-red-100 transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-semibold text-sm">Keluar (Log Out)</span>
+              <span className="font-semibold text-sm">
+                Reset Data (Log Out)
+              </span>
             </button>
           </div>
         </div>
@@ -1339,17 +1350,14 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => {
-              setActiveTab("Akun");
-              logout();
-            }}
+            onClick={() => setActiveTab("Pengaturan")}
             className={cn(
               "flex flex-col items-center p-2 mb-2 w-16",
-              activeTab === "Akun" ? "text-blue-600" : "text-gray-400",
+              activeTab === "Pengaturan" ? "text-blue-600" : "text-gray-400",
             )}
           >
-            <User className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-medium">Akun</span>
+            <Settings className="w-6 h-6 mb-1" />
+            <span className="text-[10px] font-medium">Pengaturan</span>
           </button>
         </div>
 

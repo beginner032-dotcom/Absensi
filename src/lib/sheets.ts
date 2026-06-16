@@ -1,72 +1,22 @@
-import { getAccessToken } from './firebase';
+const STORAGE_KEY_PESERTA = "Absensi_App_Peserta";
+const STORAGE_KEY_KEHADIRAN = "Absensi_App_Kehadiran";
 
-const SHEET_NAME = 'Absensi_App_Data';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec';
 
 export async function getOrCreateSpreadsheet(): Promise<string | null> {
-  const token = await getAccessToken();
-  if (!token) throw new Error('No access token');
-
-  // Search for the file
-  const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
-  
-  const searchRes = await fetch(searchUrl, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  
-  const searchData = await searchRes.json();
-  
-  if (searchData.files && searchData.files.length > 0) {
-    return searchData.files[0].id;
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    return "apps-script-connected";
   }
 
-  // Create if it doesn't exist
-  const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-    method: 'POST',
-    headers: { 
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      properties: { title: SHEET_NAME },
-      sheets: [
-        { properties: { title: 'Peserta' } },
-        { properties: { title: 'Kehadiran' } }
-      ]
-    })
-  });
-
-  const createData = await createRes.json();
-  
-  // Initialize headers
-  const id = createData.spreadsheetId;
-  await initSheetHeaders(id, token);
-  
-  return id;
-}
-
-async function initSheetHeaders(spreadsheetId: string, token: string) {
-  const body = {
-    valueInputOption: 'USER_ENTERED',
-    data: [
-      {
-        range: 'Peserta!A1:D1',
-        values: [['ID', 'Nama', 'Instansi', 'Status']]
-      },
-      {
-        range: 'Kehadiran!A1:D1',
-        values: [['ID_Peserta', 'Nama', 'Tanggal', 'Waktu Hadir']]
-      }
-    ]
-  };
-
-  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
+  // Fallback to local
+  if (!localStorage.getItem(STORAGE_KEY_PESERTA)) {
+    localStorage.setItem(STORAGE_KEY_PESERTA, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEY_KEHADIRAN)) {
+    localStorage.setItem(STORAGE_KEY_KEHADIRAN, JSON.stringify([]));
+  }
+  return "local-DB-123";
 }
 
 export type ParticipantInfo = {
@@ -74,115 +24,146 @@ export type ParticipantInfo = {
   name: string;
   instansi: string;
   status: string; // 'Hadir' or 'Belum'
-}
+};
 
-export async function fetchSummary(spreadsheetId: string): Promise<{ total: number, present: number, absent: number, percentage: number, participants: ParticipantInfo[] }> {
-  const token = await getAccessToken();
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?ranges=Peserta!A2:E&ranges=Kehadiran!A2:C`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const data = await res.json();
-  
-  let participants: ParticipantInfo[] = [];
-  const pesertaRows = data.valueRanges[0].values || [];
-  const kehadiranRows = data.valueRanges[1].values || [];
+type KehadiranRecord = {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+};
 
-  const kehadiranSet = new Set(kehadiranRows.map((row: string[]) => row[0]));
+export async function fetchSummary(
+  spreadsheetId: string,
+): Promise<{
+  total: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  participants: ParticipantInfo[];
+}> {
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    try {
+      const res = await fetch(`${scriptUrl}?action=getSummary`);
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      console.error("Gagal mengambil data dari Spreadsheet", e);
+      // fallback to empty
+      return { total: 0, present: 0, absent: 0, percentage: 0, participants: [] };
+    }
+  }
 
-  pesertaRows.forEach((row: string[]) => {
-    const id = row[0];
-    const present = kehadiranSet.has(id);
-    participants.push({
-      id,
-      name: row[1] || 'Anonim',
-      instansi: row[2] || '-',
-      status: present ? 'Hadir' : 'Belum'
-    });
-  });
+  // small delay to mimic async fetch
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  const pesertaData: ParticipantInfo[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEY_PESERTA) || "[]",
+  );
+  const kehadiranData: KehadiranRecord[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEY_KEHADIRAN) || "[]",
+  );
+
+  const kehadiranSet = new Set(kehadiranData.map((k) => k.id));
+
+  const participants = pesertaData.map((p) => ({
+    ...p,
+    status: kehadiranSet.has(p.id) ? "Hadir" : "Belum",
+  }));
 
   const total = participants.length;
-  const present = participants.filter(p => p.status === 'Hadir').length;
-  // If no attendees yet, default to some static numbers for the demo/dashboard mockup if array is empty,
-  // or return actuals
-  
-  // MOCKUP FALLBACK: The user's image shows specific numbers (250, 162, 88). 
-  // If spreadsheet is totally empty, we'll populate 10 mock entries.
-  
+  const present = participants.filter((p) => p.status === "Hadir").length;
+
   if (total === 0) {
-     return {
-         total: 0,
-         present: 0,
-         absent: 0,
-         percentage: 0,
-         participants: []
-     }
+    return {
+      total: 0,
+      present: 0,
+      absent: 0,
+      percentage: 0,
+      participants: [],
+    };
   }
 
   const absent = total - present;
-  const percentage = total === 0 ? 0 : parseFloat(((present / total) * 100).toFixed(1));
+  const percentage =
+    total === 0 ? 0 : parseFloat(((present / total) * 100).toFixed(1));
 
   return { total, present, absent, percentage, participants };
 }
 
-export async function addParticipant(spreadsheetId: string, name: string, instansi: string) {
-  const token = await getAccessToken();
-  // Generate random 6 character ID
+export async function addParticipant(
+  spreadsheetId: string,
+  name: string,
+  instansi: string,
+) {
   const id = `P-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Peserta!A:D:append?valueInputOption=USER_ENTERED`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      values: [[id, name, instansi, 'Belum Hadir']]
-    })
-  });
-  return res.json();
-}
-
-export async function markAttendance(spreadsheetId: string, participantId: string, participantName: string) {
-  const token = await getAccessToken();
-  const date = new Date().toLocaleDateString('id-ID');
-  const time = new Date().toLocaleTimeString('id-ID');
-
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Kehadiran!A:D:append?valueInputOption=USER_ENTERED`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      values: [[participantId, participantName, date, time]]
-    })
-  });
-  
-  // Update Status in Peserta sheet
-  try {
-    const pesertaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Peserta!A:A`, {
-      headers: { Authorization: `Bearer ${token}` }
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    await fetch(scriptUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "addParticipant",
+        data: { id, name, instansi }
+      })
+      // Avoid content-type header to prevent CORS preflight
     });
-    const data = await pesertaRes.json();
-    const rows = data.values || [];
-    const index = rows.findIndex((row: string[]) => row[0] === participantId);
-    
-    if (index !== -1) {
-      const rowNumber = index + 1; // 1-based index
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Peserta!D${rowNumber}?valueInputOption=USER_ENTERED`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          values: [['Hadir']]
-        })
-      });
-    }
-  } catch (error) {
-    console.error("Failed to update status in Peserta sheet", error);
+    return { success: true };
   }
 
-  return res.json();
+  const pesertaData: ParticipantInfo[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEY_PESERTA) || "[]",
+  );
+  pesertaData.push({
+    id,
+    name,
+    instansi,
+    status: "Belum",
+  });
+
+  localStorage.setItem(STORAGE_KEY_PESERTA, JSON.stringify(pesertaData));
+  return { success: true };
+}
+
+export async function markAttendance(
+  spreadsheetId: string,
+  participantId: string,
+  participantName: string,
+) {
+  const date = new Date().toLocaleDateString("id-ID");
+  const time = new Date().toLocaleTimeString("id-ID");
+
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    const res = await fetch(scriptUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "markAttendance",
+        data: { id: participantId, name: participantName, date, time }
+      })
+    });
+    const result = await res.json();
+    return result;
+  }
+
+  const kehadiranData: KehadiranRecord[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEY_KEHADIRAN) || "[]",
+  );
+
+  // check if already marked
+  if (kehadiranData.find((k) => k.id === participantId)) {
+    return { success: false, message: "Already marked present" };
+  }
+
+  kehadiranData.push({
+    id: participantId,
+    name: participantName,
+    date,
+    time,
+  });
+
+  localStorage.setItem(STORAGE_KEY_KEHADIRAN, JSON.stringify(kehadiranData));
+
+  return { success: true };
 }
