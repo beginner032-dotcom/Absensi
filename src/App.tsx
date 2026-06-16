@@ -1247,76 +1247,76 @@ function doGet(e) {
         </div>
 
         {/* Ringkasan Kehadiran */}
-        <div className="px-5 mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-sm text-gray-900 tracking-tight">
+        <div className="px-5 mb-5 mt-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-base text-gray-900 tracking-tight">
               Ringkasan Kehadiran
             </h3>
             <button
-              className="text-blue-600 bg-blue-50 hover:bg-blue-100 text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors"
+              className="text-blue-600 bg-blue-50 hover:bg-blue-100 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-colors"
               onClick={loadData}
             >
               Lihat Semua
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
             {/* Total Peserta */}
             <div
-              className="bg-[#4285F4] text-white rounded-xl p-2 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#4285F4] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("Peserta")}
             >
-              <div className="w-6 h-6 flex items-center justify-center border border-white/30 rounded-lg mb-1">
-                <Users className="w-3 h-3" />
+              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
+                <Users className="w-4 h-4" />
               </div>
-              <span className="text-[9px] font-medium leading-tight mb-0.5 opacity-90">
+              <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Total Peserta
               </span>
-              <span className="text-base font-bold tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.total ?? 0)}
               </span>
-              <span className="text-[8px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium">Orang</span>
             </div>
 
             {/* Sudah Hadir */}
             <div
-              className="bg-[#34A853] text-white rounded-xl p-2 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#34A853] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("Kehadiran")}
             >
-              <div className="w-6 h-6 flex items-center justify-center border border-white/30 rounded-lg mb-1">
-                <CheckCircle className="w-3 h-3" />
+              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
+                <CheckCircle className="w-4 h-4" />
               </div>
-              <span className="text-[9px] font-medium leading-tight mb-0.5 opacity-90">
+              <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Sudah Hadir
               </span>
-              <span className="text-base font-bold tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.present ?? 0)}
               </span>
-              <span className="text-[8px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium">Orang</span>
             </div>
 
             {/* Belum Hadir */}
             <div
-              className="bg-[#FBBC05] text-white rounded-xl p-2 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#FBBC05] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("BelumHadir")}
             >
-              <div className="w-6 h-6 flex items-center justify-center border border-white/30 rounded-lg mb-1">
-                <User className="w-3 h-3" />
+              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
+                <User className="w-4 h-4" />
               </div>
-              <span className="text-[9px] font-medium leading-tight mb-0.5 opacity-90">
+              <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Belum Hadir
               </span>
-              <span className="text-base font-bold tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.absent ?? 0)}
               </span>
-              <span className="text-[8px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium">Orang</span>
             </div>
 
             {/* Persentase */}
-            <div className="bg-[#9333EA] text-white rounded-xl p-2 flex flex-col items-center text-center shadow-sm">
-              <div className="w-6 h-6 flex items-center justify-center border border-white/30 rounded-lg mb-1">
+            <div className="bg-[#9333EA] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm">
+              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
                 <svg
-                  className="w-3 h-3"
+                  className="w-4 h-4"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -1326,13 +1326,13 @@ function doGet(e) {
                   <path d="m9 12 2 2 4-4" />
                 </svg>
               </div>
-              <span className="text-[9px] font-medium leading-tight mb-0.5 opacity-90">
+              <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Persentase
               </span>
-              <span className="text-base font-bold tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loadingData ? "..." : `${summary?.percentage ?? 0}%`}
               </span>
-              <span className="text-[8px] opacity-80 font-medium">
+              <span className="text-[9px] opacity-80 font-medium mt-0.5">
                 Kehadiran
               </span>
             </div>
@@ -1340,49 +1340,49 @@ function doGet(e) {
         </div>
 
         {/* Menu Cepat */}
-        <div className="px-5 pb-2">
-          <h3 className="font-bold text-sm text-gray-900 tracking-tight mb-2">
+        <div className="flex-1 px-5 pb-6">
+          <h3 className="font-bold text-base text-gray-900 tracking-tight mb-3">
             Menu Cepat
           </h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => setActiveTab("Scan")}
             >
-              <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center mb-1.5 text-blue-600">
-                <QrCode className="w-4 h-4" />
+              <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-3 text-blue-600">
+                <QrCode className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800">
+              <span className="text-sm font-bold text-gray-800">
                 Scan QR
               </span>
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => setActiveTab("Peserta")}
             >
-              <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center mb-1.5 text-green-600">
-                <Users className="w-4 h-4" />
+              <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mb-3 text-green-600">
+                <Users className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800">
+              <span className="text-sm font-bold text-gray-800 text-center leading-tight">
                 Daftar Peserta
               </span>
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => setActiveTab("Kehadiran")}
             >
-              <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center mb-1.5 text-orange-500">
-                <CheckCircle className="w-4 h-4" />
+              <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mb-3 text-orange-500">
+                <CheckCircle className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800">
+              <span className="text-sm font-bold text-gray-800">
                 Kehadiran
               </span>
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => {
                 const sheetUrl =
                   localStorage.getItem("SPREADSHEET_URL") ||
@@ -1404,34 +1404,34 @@ function doGet(e) {
                 }
               }}
             >
-              <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center mb-1.5 text-purple-600">
-                <FileText className="w-4 h-4" />
+              <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-3 text-purple-600">
+                <FileText className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800 text-center leading-tight">
+              <span className="text-sm font-bold text-gray-800">
                 Spreadsheet
               </span>
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => setActiveTab("BelumHadir")}
             >
-              <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center mb-1.5 text-orange-500">
-                <UserMinus className="w-4 h-4" />
+              <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mb-3 text-orange-500">
+                <UserMinus className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800">
+              <span className="text-sm font-bold text-gray-800 text-center leading-tight">
                 Belum Hadir
               </span>
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-2xl p-2.5 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow aspect-[4/3] sm:aspect-square md:aspect-[4/3] justify-center"
               onClick={() => setActiveTab("Pengaturan")}
             >
-              <div className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center mb-1.5 text-gray-600">
-                <Settings className="w-4 h-4" />
+              <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-3 text-gray-600">
+                <Settings className="w-7 h-7" />
               </div>
-              <span className="text-[10px] font-semibold text-gray-800">
+              <span className="text-sm font-bold text-gray-800">
                 Pengaturan
               </span>
             </button>
