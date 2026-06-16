@@ -209,6 +209,9 @@ type SummaryData = {
   participants: ParticipantInfo[];
 };
 
+const DEFAULT_SPREADSHEET_URL =
+  "https://docs.google.com/spreadsheets/d/1_aKE6MEZO7McVeBMPTxUFEvZp_MklHE8jPSzaxbJhvw/edit?gid=1418602897#gid=1418602897";
+
 export default function App() {
   const [spreadsheetId, setSpreadsheetId] = useState<string | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
@@ -759,7 +762,6 @@ export default function App() {
         </div>
 
         <div className="flex-1 p-6 space-y-6">
-
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">
               Data & Kehadiran
@@ -784,7 +786,10 @@ export default function App() {
                   type="text"
                   placeholder="https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec"
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  defaultValue={localStorage.getItem("APPS_SCRIPT_URL") || "https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec"}
+                  defaultValue={
+                    localStorage.getItem("APPS_SCRIPT_URL") ||
+                    "https://script.google.com/macros/s/AKfycbxKwLf6sm3AjfOejorWjxdqkK-MFcRonQu8wYo-bHIoF8kVxhfCydb9ObvN6z4TUvwy/exec"
+                  }
                   onBlur={(e) => {
                     const value = e.target.value.trim();
                     if (value) {
@@ -883,7 +888,11 @@ function doGet(e) {
                   type="text"
                   placeholder="https://docs.google.com/spreadsheets/d/..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  defaultValue={localStorage.getItem("SPREADSHEET_URL") || ""}
+                  defaultValue={
+                    localStorage.getItem("SPREADSHEET_URL") ||
+                    DEFAULT_SPREADSHEET_URL ||
+                    ""
+                  }
                   onBlur={(e) => {
                     const value = e.target.value.trim();
                     if (value) {
@@ -894,20 +903,27 @@ function doGet(e) {
                   }}
                 />
               </div>
-
             </div>
 
             <button
               onClick={() => {
-                if (localStorage.getItem("SPREADSHEET_URL")) {
-                  window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
-                } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
+                const sheetUrl =
+                  localStorage.getItem("SPREADSHEET_URL") ||
+                  DEFAULT_SPREADSHEET_URL;
+                if (sheetUrl) {
+                  window.open(sheetUrl, "_blank");
+                } else if (
+                  spreadsheetId &&
+                  spreadsheetId !== "apps-script-connected"
+                ) {
                   window.open(
                     `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                     "_blank",
                   );
                 } else {
-                  alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
+                  alert(
+                    "Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.",
+                  );
                 }
               }}
               className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -1076,15 +1092,23 @@ function doGet(e) {
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  if (localStorage.getItem("SPREADSHEET_URL")) {
-                    window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
-                  } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
+                  const sheetUrl =
+                    localStorage.getItem("SPREADSHEET_URL") ||
+                    DEFAULT_SPREADSHEET_URL;
+                  if (sheetUrl) {
+                    window.open(sheetUrl, "_blank");
+                  } else if (
+                    spreadsheetId &&
+                    spreadsheetId !== "apps-script-connected"
+                  ) {
                     window.open(
                       `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                       "_blank",
                     );
                   } else {
-                    alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
+                    alert(
+                      "Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.",
+                    );
                   }
                 }}
                 className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer text-left"
@@ -1162,7 +1186,7 @@ function doGet(e) {
                 Total Peserta
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.total ?? 0}
+                {loadingData ? "..." : (summary?.total ?? 0)}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1179,7 +1203,7 @@ function doGet(e) {
                 Sudah Hadir
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.present ?? 0}
+                {loadingData ? "..." : (summary?.present ?? 0)}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1196,7 +1220,7 @@ function doGet(e) {
                 Belum Hadir
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.absent ?? 0}
+                {loadingData ? "..." : (summary?.absent ?? 0)}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1273,15 +1297,23 @@ function doGet(e) {
             <button
               className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => {
-                if (localStorage.getItem("SPREADSHEET_URL")) {
-                  window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
-                } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
+                const sheetUrl =
+                  localStorage.getItem("SPREADSHEET_URL") ||
+                  DEFAULT_SPREADSHEET_URL;
+                if (sheetUrl) {
+                  window.open(sheetUrl, "_blank");
+                } else if (
+                  spreadsheetId &&
+                  spreadsheetId !== "apps-script-connected"
+                ) {
                   window.open(
                     `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                     "_blank",
                   );
                 } else {
-                  alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
+                  alert(
+                    "Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.",
+                  );
                 }
               }}
             >
