@@ -864,17 +864,50 @@ function doGet(e) {
                   Salin Kode Apps Script
                 </button>
               </div>
+
+              <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center space-x-3 mb-1">
+                  <div className="bg-green-50 p-2 rounded-xl text-green-600">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-semibold text-gray-900 text-sm">
+                      Google Spreadsheet URL
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      URL Spreadsheet Anda (opsional)
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  placeholder="https://docs.google.com/spreadsheets/d/..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  defaultValue={localStorage.getItem("SPREADSHEET_URL") || ""}
+                  onBlur={(e) => {
+                    const value = e.target.value.trim();
+                    if (value) {
+                      localStorage.setItem("SPREADSHEET_URL", value);
+                    } else {
+                      localStorage.removeItem("SPREADSHEET_URL");
+                    }
+                  }}
+                />
+              </div>
+
             </div>
 
             <button
               onClick={() => {
-                if (spreadsheetId) {
+                if (localStorage.getItem("SPREADSHEET_URL")) {
+                  window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
+                } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
                   window.open(
                     `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                     "_blank",
                   );
                 } else {
-                  alert("Spreadsheet belum tersedia.");
+                  alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
                 }
               }}
               className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -1043,13 +1076,15 @@ function doGet(e) {
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  if (spreadsheetId) {
+                  if (localStorage.getItem("SPREADSHEET_URL")) {
+                    window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
+                  } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
                     window.open(
                       `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                       "_blank",
                     );
                   } else {
-                    alert("Spreadsheet belum tersedia.");
+                    alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
                   }
                 }}
                 className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer text-left"
@@ -1127,7 +1162,7 @@ function doGet(e) {
                 Total Peserta
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.total || 250}
+                {loadingData ? "..." : summary?.total ?? 0}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1144,7 +1179,7 @@ function doGet(e) {
                 Sudah Hadir
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.present || 162}
+                {loadingData ? "..." : summary?.present ?? 0}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1161,7 +1196,7 @@ function doGet(e) {
                 Belum Hadir
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : summary?.absent || 88}
+                {loadingData ? "..." : summary?.absent ?? 0}
               </span>
               <span className="text-[10px] opacity-80 font-medium">Orang</span>
             </div>
@@ -1184,7 +1219,7 @@ function doGet(e) {
                 Persentase
               </span>
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                {loadingData ? "..." : `${summary?.percentage || 64.8}%`}
+                {loadingData ? "..." : `${summary?.percentage ?? 0}%`}
               </span>
               <span className="text-[10px] opacity-80 font-medium">
                 Kehadiran
@@ -1238,13 +1273,15 @@ function doGet(e) {
             <button
               className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => {
-                if (spreadsheetId) {
+                if (localStorage.getItem("SPREADSHEET_URL")) {
+                  window.open(localStorage.getItem("SPREADSHEET_URL")!, "_blank");
+                } else if (spreadsheetId && spreadsheetId !== "apps-script-connected") {
                   window.open(
                     `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
                     "_blank",
                   );
                 } else {
-                  alert("Spreadsheet belum tersedia.");
+                  alert("Spreadsheet belum tersedia. Silakan isi Google Spreadsheet URL di pengaturan.");
                 }
               }}
             >
