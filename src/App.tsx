@@ -30,6 +30,7 @@ import {
   PieChart,
   TrendingUp,
   Database,
+  CheckSquare,
 } from "lucide-react";
 import {
   getOrCreateSpreadsheet,
@@ -342,7 +343,7 @@ export default function App() {
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-        <div className="max-w-md mx-auto w-full relative bg-gray-50 flex flex-col">
+        <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20">
             <h1 className="text-xl font-bold">Scan QR Kehadiran</h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -455,7 +456,7 @@ export default function App() {
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-        <div className="max-w-md mx-auto w-full relative bg-gray-50">
+        <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50">
           <div className="bg-white sticky top-0 z-20 px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-xl font-bold">Daftar Peserta</h1>
@@ -617,17 +618,48 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  const canvas = document.getElementById(
+                  const qrCanvas = document.getElementById(
                     "qr-canvas",
                   ) as HTMLCanvasElement;
-                  if (canvas) {
-                    const pngUrl = canvas.toDataURL("image/png");
-                    const downloadLink = document.createElement("a");
-                    downloadLink.href = pngUrl;
-                    downloadLink.download = `QR_${selectedQR.name.replace(/\s+/g, "_")}.png`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
+                  if (qrCanvas) {
+                    const tempCanvas = document.createElement("canvas");
+                    const padding = 40;
+                    const textTopHeight = 100;
+                    const textBottomHeight = 60;
+                    
+                    tempCanvas.width = qrCanvas.width + padding * 2;
+                    tempCanvas.height = qrCanvas.height + padding * 2 + textTopHeight + textBottomHeight;
+                    const ctx = tempCanvas.getContext("2d");
+                    if (ctx) {
+                      ctx.fillStyle = "#ffffff";
+                      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                      
+                      // Draw Top Text (Name and Instansi)
+                      ctx.fillStyle = "#111827"; 
+                      ctx.textAlign = "center";
+                      ctx.font = "bold 24px sans-serif";
+                      ctx.fillText(selectedQR.name, tempCanvas.width / 2, padding + 30);
+                      
+                      ctx.fillStyle = "#6b7280"; 
+                      ctx.font = "16px sans-serif";
+                      ctx.fillText(selectedQR.instansi, tempCanvas.width / 2, padding + 60);
+
+                      // Draw QR code
+                      ctx.drawImage(qrCanvas, padding, padding + textTopHeight);
+                      
+                      // Draw Bottom Text (ID)
+                      ctx.fillStyle = "#374151"; 
+                      ctx.font = "bold 20px monospace";
+                      ctx.fillText(selectedQR.id, tempCanvas.width / 2, tempCanvas.height - padding - 10);
+
+                      const pngUrl = tempCanvas.toDataURL("image/png");
+                      const downloadLink = document.createElement("a");
+                      downloadLink.href = pngUrl;
+                      downloadLink.download = `QR_${selectedQR.name.replace(/\s+/g, "_")}.png`;
+                      document.body.appendChild(downloadLink);
+                      downloadLink.click();
+                      document.body.removeChild(downloadLink);
+                    }
                   }
                 }}
                 className="w-full flex items-center justify-center space-x-2 bg-blue-50 text-blue-700 font-bold rounded-xl py-3 mb-4 hover:bg-blue-100 transition shadow-sm border border-blue-100"
@@ -654,7 +686,7 @@ export default function App() {
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-        <div className="max-w-md mx-auto w-full relative bg-gray-50 flex flex-col">
+        <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
             <h1 className="text-xl font-bold">Data Kehadiran</h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -706,7 +738,7 @@ export default function App() {
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-        <div className="max-w-md mx-auto w-full relative bg-gray-50 flex flex-col">
+        <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
             <h1 className="text-xl font-bold">Peserta Belum Hadir</h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -753,7 +785,7 @@ export default function App() {
 
   const renderPengaturan = () => (
     <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-      <div className="max-w-md mx-auto w-full relative bg-gray-50 flex flex-col">
+      <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
         <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
           <h1 className="text-xl font-bold">Pengaturan</h1>
           <p className="text-gray-500 text-sm mt-1">
@@ -996,7 +1028,7 @@ function doGet(e) {
 
     return (
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
-        <div className="max-w-md mx-auto w-full relative bg-gray-50 flex flex-col">
+        <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
             <h1 className="text-xl font-bold">Laporan Kehadiran</h1>
             <p className="text-gray-500 text-sm mt-1">
@@ -1138,10 +1170,12 @@ function doGet(e) {
   const renderDashboard = () => (
     <div className="font-sans text-gray-900 bg-white min-h-full pb-6">
       {/* Target mobile width for desktop preview */}
-      <div className="max-w-md mx-auto w-full relative">
+      <div className="max-w-md md:max-w-none mx-auto w-full relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6">
-          <Menu className="w-6 h-6 text-gray-800" />
+          <Menu className="w-6 h-6 text-gray-800 md:hidden" />
+          <div className="hidden md:block w-6"></div>{" "}
+          {/* Spacer for desktop so title remains centered */}
           <h1 className="text-xl font-bold">Dashboard</h1>
           <div className="relative">
             <Bell className="w-6 h-6 text-gray-800" />
@@ -1355,20 +1389,74 @@ function doGet(e) {
   );
 
   return (
-    <div className="flex justify-center bg-gray-100 h-[100dvh] w-screen overflow-hidden">
-      <div className="w-full max-w-md bg-white relative shadow-xl overflow-hidden flex flex-col h-full">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
-          {activeTab === "Dashboard" && renderDashboard()}
-          {activeTab === "Peserta" && renderPeserta()}
-          {activeTab === "Scan" && renderScan()}
-          {activeTab === "Kehadiran" && renderKehadiran()}
-          {activeTab === "BelumHadir" && renderBelumHadir()}
-          {activeTab === "Laporan" && renderLaporan()}
-          {activeTab === "Pengaturan" && renderPengaturan()}
+    <div className="flex bg-gray-100 md:bg-[#1A1C1E] h-[100dvh] w-screen overflow-hidden text-gray-900">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex flex-col w-64 lg:w-72 h-full border-r border-gray-800">
+        <div className="flex items-center space-x-3 px-8 py-8 border-b border-gray-800/50">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
+            <CheckCircle className="w-6 h-6 text-white" />
+          </div>
+          <span className="font-bold text-xl text-white tracking-tight">
+            HadirApp
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 py-8 scrollbar-hide">
+          <nav className="space-y-1">
+            {[
+              { id: "Dashboard", label: "Dashboard", icon: Home },
+              { id: "Scan", label: "Scan QR", icon: Scan },
+              { id: "Peserta", label: "Daftar Peserta", icon: Users },
+              { id: "Kehadiran", label: "Sudah Hadir", icon: CheckSquare },
+              { id: "BelumHadir", label: "Belum Hadir", icon: UserMinus },
+              { id: "Laporan", label: "Laporan", icon: FileText },
+              { id: "Pengaturan", label: "Pengaturan", icon: Settings },
+            ].map((item) => {
+              const active = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={cn(
+                    "w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-200 font-medium group",
+                    active
+                      ? "bg-blue-600/10 text-blue-500"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-gray-200",
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "w-5 h-5 transition-colors",
+                      active
+                        ? "text-blue-500"
+                        : "text-gray-500 group-hover:text-gray-300",
+                    )}
+                  />
+                  <span className={cn(active && "font-bold")}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="w-full md:flex-1 relative shadow-2xl overflow-hidden flex flex-col h-full bg-white md:bg-gray-50 md:rounded-l-[2.5rem] md:my-3 md:border md:border-gray-200/50">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide md:p-6 lg:p-10">
+          <div className="md:max-w-6xl md:mx-auto">
+            {activeTab === "Dashboard" && renderDashboard()}
+            {activeTab === "Peserta" && renderPeserta()}
+            {activeTab === "Scan" && renderScan()}
+            {activeTab === "Kehadiran" && renderKehadiran()}
+            {activeTab === "BelumHadir" && renderBelumHadir()}
+            {activeTab === "Laporan" && renderLaporan()}
+            {activeTab === "Pengaturan" && renderPengaturan()}
+          </div>
         </div>
 
-        {/* Bottom Nav */}
-        <div className="bg-white border-t border-gray-100 pb-safe pt-2 px-6 flex justify-between items-center z-10 w-full">
+        {/* Bottom Nav Mobile */}
+        <div className="md:hidden bg-white border-t border-gray-100 pb-safe pt-2 px-6 flex justify-between items-center z-10 w-full shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
           <button
             onClick={() => setActiveTab("Dashboard")}
             className={cn(
