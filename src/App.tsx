@@ -31,6 +31,7 @@ import {
   TrendingUp,
   Database,
   CheckSquare,
+  ArrowLeft,
 } from "lucide-react";
 import {
   getOrCreateSpreadsheet,
@@ -465,7 +466,15 @@ export default function App() {
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50">
           <div className="bg-white sticky top-0 z-20 px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold">Daftar Peserta</h1>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setActiveTab("Dashboard")}
+                  className="mr-3 text-gray-800 hover:bg-gray-100 p-2 rounded-full -ml-2 md:hidden"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h1 className="text-xl font-bold">Daftar Peserta</h1>
+              </div>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 transition-colors shadow-sm"
@@ -694,8 +703,16 @@ export default function App() {
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
-            <h1 className="text-xl font-bold">Data Kehadiran</h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <div className="flex items-center mb-1">
+              <button
+                onClick={() => setActiveTab("Dashboard")}
+                className="mr-3 text-gray-800 hover:bg-gray-100 p-2 rounded-full -ml-2 md:hidden"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold">Data Kehadiran</h1>
+            </div>
+            <p className="text-gray-500 text-sm pl-10 md:pl-0 lg:pl-0">
               {presentParticipants.length} Peserta telah hadir
             </p>
           </div>
@@ -746,8 +763,16 @@ export default function App() {
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
-            <h1 className="text-xl font-bold">Peserta Belum Hadir</h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <div className="flex items-center mb-1">
+              <button
+                onClick={() => setActiveTab("Dashboard")}
+                className="mr-3 text-gray-800 hover:bg-gray-100 p-2 rounded-full -ml-2 md:hidden"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold">Peserta Belum Hadir</h1>
+            </div>
+            <p className="text-gray-500 text-sm pl-10 md:pl-0 lg:pl-0">
               {absentParticipants.length} Peserta belum hadir
             </p>
           </div>
@@ -793,8 +818,16 @@ export default function App() {
     <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
       <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
         <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
-          <h1 className="text-xl font-bold">Pengaturan</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <div className="flex items-center mb-1">
+            <button
+              onClick={() => setActiveTab("Dashboard")}
+              className="mr-3 text-gray-800 hover:bg-gray-100 p-2 rounded-full -ml-2 md:hidden"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold">Pengaturan</h1>
+          </div>
+          <p className="text-gray-500 text-sm pl-10 md:pl-0 lg:pl-0">
             Konfigurasi aplikasi dan akun
           </p>
         </div>
@@ -1036,8 +1069,16 @@ function doGet(e) {
       <div className="font-sans text-gray-900 bg-gray-50 min-h-full pb-6">
         <div className="max-w-md md:max-w-none mx-auto w-full relative bg-gray-50 flex flex-col">
           <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-sm z-20 sticky top-0">
-            <h1 className="text-xl font-bold">Laporan Kehadiran</h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <div className="flex items-center mb-1">
+              <button
+                onClick={() => setActiveTab("Dashboard")}
+                className="mr-3 text-gray-800 hover:bg-gray-100 p-2 rounded-full -ml-2 md:hidden"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold">Laporan Kehadiran</h1>
+            </div>
+            <p className="text-gray-500 text-sm pl-10 md:pl-0 lg:pl-0">
               Ringkasan data hari ini
             </p>
           </div>
@@ -1178,19 +1219,23 @@ function doGet(e) {
       {/* Target mobile width for desktop preview */}
       <div className="max-w-md md:max-w-none mx-auto w-full relative">
         {/* Header */}
-        <div className="flex items-center justify-between p-6">
+        <div className="flex items-center justify-between px-5 py-3">
           <Menu className="w-6 h-6 text-gray-800 md:hidden" />
           <div className="hidden md:block w-6"></div>{" "}
           {/* Spacer for desktop so title remains centered */}
           <h1 className="text-xl font-bold">Dashboard</h1>
           <div className="relative">
-            <Bell className="w-6 h-6 text-gray-800" />
-            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></div>
+            <button
+              onClick={() => window.location.reload()}
+              className="p-2 -mr-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors focus:outline-none"
+            >
+              <RefreshCw className="w-6 h-6" />
+            </button>
           </div>
         </div>
 
         {/* Meeting Info */}
-        <div className="px-6 mb-8 mt-2">
+        <div className="px-5 mb-5">
           <h2 className="text-[17px] font-bold text-gray-900">
             Meat Year Meeting 2026
           </h2>
@@ -1200,8 +1245,8 @@ function doGet(e) {
         </div>
 
         {/* Ringkasan Kehadiran */}
-        <div className="px-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-base text-gray-900 tracking-tight">
               Ringkasan Kehadiran
             </h3>
@@ -1213,63 +1258,63 @@ function doGet(e) {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {/* Total Peserta */}
             <div
-              className="bg-[#4285F4] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#4285F4] text-white rounded-2xl p-2.5 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("Peserta")}
             >
-              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
-                <Users className="w-4 h-4" />
+              <div className="w-7 h-7 flex items-center justify-center border border-white/30 rounded-lg mb-1.5">
+                <Users className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Total Peserta
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-lg sm:text-xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.total ?? 0)}
               </span>
-              <span className="text-[10px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium mt-0.5">Orang</span>
             </div>
 
             {/* Sudah Hadir */}
             <div
-              className="bg-[#34A853] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#34A853] text-white rounded-2xl p-2.5 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("Kehadiran")}
             >
-              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
-                <CheckCircle className="w-4 h-4" />
+              <div className="w-7 h-7 flex items-center justify-center border border-white/30 rounded-lg mb-1.5">
+                <CheckCircle className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Sudah Hadir
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-lg sm:text-xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.present ?? 0)}
               </span>
-              <span className="text-[10px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium mt-0.5">Orang</span>
             </div>
 
             {/* Belum Hadir */}
             <div
-              className="bg-[#FBBC05] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
+              className="bg-[#FBBC05] text-white rounded-2xl p-2.5 flex flex-col items-center text-center shadow-sm cursor-pointer hover:bg-opacity-90 transition-colors"
               onClick={() => setActiveTab("BelumHadir")}
             >
-              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
-                <User className="w-4 h-4" />
+              <div className="w-7 h-7 flex items-center justify-center border border-white/30 rounded-lg mb-1.5">
+                <User className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Belum Hadir
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-lg sm:text-xl font-bold tracking-tight">
                 {loadingData ? "..." : (summary?.absent ?? 0)}
               </span>
-              <span className="text-[10px] opacity-80 font-medium">Orang</span>
+              <span className="text-[9px] opacity-80 font-medium mt-0.5">Orang</span>
             </div>
 
             {/* Persentase */}
-            <div className="bg-[#9333EA] text-white rounded-2xl p-3 flex flex-col items-center text-center shadow-sm">
-              <div className="w-8 h-8 flex items-center justify-center border border-white/30 rounded-lg mb-2">
+            <div className="bg-[#9333EA] text-white rounded-2xl p-2.5 flex flex-col items-center text-center shadow-sm">
+              <div className="w-7 h-7 flex items-center justify-center border border-white/30 rounded-lg mb-1.5">
                 <svg
-                  className="w-4 h-4"
+                  className="w-3.5 h-3.5"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -1282,10 +1327,10 @@ function doGet(e) {
               <span className="text-[10px] font-medium leading-tight mb-1 opacity-90">
                 Persentase
               </span>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-lg sm:text-xl font-bold tracking-tight">
                 {loadingData ? "..." : `${summary?.percentage ?? 0}%`}
               </span>
-              <span className="text-[10px] opacity-80 font-medium">
+              <span className="text-[9px] opacity-80 font-medium mt-0.5">
                 Kehadiran
               </span>
             </div>
@@ -1293,17 +1338,17 @@ function doGet(e) {
         </div>
 
         {/* Menu Cepat */}
-        <div className="px-6 mb-8">
-          <h3 className="font-bold text-base text-gray-900 tracking-tight mb-4">
+        <div className="px-5 pb-6">
+          <h3 className="font-bold text-base text-gray-900 tracking-tight mb-3">
             Menu Cepat
           </h3>
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-3 gap-2.5">
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setActiveTab("Scan")}
             >
-              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-3 text-blue-600">
-                <QrCode className="w-6 h-6" />
+              <div className="w-10 h-10 bg-blue-100 rounded-2xl flex items-center justify-center mb-2 text-blue-600">
+                <QrCode className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Scan QR
@@ -1311,11 +1356,11 @@ function doGet(e) {
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setActiveTab("Peserta")}
             >
-              <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-3 text-green-600">
-                <Users className="w-6 h-6" />
+              <div className="w-10 h-10 bg-green-100 rounded-2xl flex items-center justify-center mb-2 text-green-600">
+                <Users className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Daftar Peserta
@@ -1323,11 +1368,11 @@ function doGet(e) {
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setActiveTab("Kehadiran")}
             >
-              <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-3 text-orange-500">
-                <CheckCircle className="w-6 h-6" />
+              <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center mb-2 text-orange-500">
+                <CheckCircle className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Kehadiran
@@ -1335,7 +1380,7 @@ function doGet(e) {
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => {
                 const sheetUrl =
                   localStorage.getItem("SPREADSHEET_URL") ||
@@ -1357,8 +1402,8 @@ function doGet(e) {
                 }
               }}
             >
-              <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-3 text-purple-600">
-                <FileText className="w-6 h-6" />
+              <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center mb-2 text-purple-600">
+                <FileText className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Spreadsheet
@@ -1366,11 +1411,11 @@ function doGet(e) {
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setActiveTab("BelumHadir")}
             >
-              <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-3 text-orange-500">
-                <UserMinus className="w-6 h-6" />
+              <div className="w-10 h-10 bg-orange-100 rounded-2xl flex items-center justify-center mb-2 text-orange-500">
+                <UserMinus className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Belum Hadir
@@ -1378,11 +1423,11 @@ function doGet(e) {
             </button>
 
             <button
-              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="flex flex-col items-center bg-white border border-gray-100 rounded-3xl p-3 shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setActiveTab("Pengaturan")}
             >
-              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-3 text-gray-600">
-                <Settings className="w-6 h-6" />
+              <div className="w-10 h-10 bg-gray-100 rounded-2xl flex items-center justify-center mb-2 text-gray-600">
+                <Settings className="w-5 h-5" />
               </div>
               <span className="text-xs font-semibold text-gray-800">
                 Pengaturan
@@ -1395,7 +1440,7 @@ function doGet(e) {
   );
 
   return (
-    <div className="flex bg-gray-100 md:bg-[#1A1C1E] h-[100dvh] w-screen overflow-hidden text-gray-900">
+    <div className="flex bg-gray-100 md:bg-[#1A1C1E] h-[100dvh] w-full overflow-hidden text-gray-900 relative">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex flex-col w-64 lg:w-72 h-full border-r border-gray-800">
         <div className="flex items-center space-x-3 px-8 py-8 border-b border-gray-800/50">
@@ -1462,11 +1507,11 @@ function doGet(e) {
         </div>
 
         {/* Bottom Nav Mobile */}
-        <div className="md:hidden bg-white border-t border-gray-100 pb-safe pt-2 px-6 flex justify-between items-center z-10 w-full shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden bg-white border-t border-gray-100 py-2 px-4 flex justify-between items-center z-10 w-full shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           <button
             onClick={() => setActiveTab("Dashboard")}
             className={cn(
-              "flex flex-col items-center p-2 mb-2 w-16",
+              "flex flex-col items-center p-1 w-16",
               activeTab === "Dashboard" ? "text-blue-600" : "text-gray-400",
             )}
           >
@@ -1482,7 +1527,7 @@ function doGet(e) {
           <button
             onClick={() => setActiveTab("Scan")}
             className={cn(
-              "flex flex-col items-center p-2 mb-2 w-16",
+              "flex flex-col items-center p-1 w-16",
               activeTab === "Scan" ? "text-blue-600" : "text-gray-400",
             )}
           >
@@ -1493,7 +1538,7 @@ function doGet(e) {
           <button
             onClick={() => setActiveTab("Peserta")}
             className={cn(
-              "flex flex-col items-center p-2 mb-2 w-16",
+              "flex flex-col items-center p-1 w-16",
               activeTab === "Peserta" ? "text-blue-600" : "text-gray-400",
             )}
           >
@@ -1504,7 +1549,7 @@ function doGet(e) {
           <button
             onClick={() => setActiveTab("Laporan")}
             className={cn(
-              "flex flex-col items-center p-2 mb-2 w-16",
+              "flex flex-col items-center p-1 w-16",
               activeTab === "Laporan" ? "text-blue-600" : "text-gray-400",
             )}
           >
@@ -1515,18 +1560,13 @@ function doGet(e) {
           <button
             onClick={() => setActiveTab("Pengaturan")}
             className={cn(
-              "flex flex-col items-center p-2 mb-2 w-16",
+              "flex flex-col items-center p-1 w-16",
               activeTab === "Pengaturan" ? "text-blue-600" : "text-gray-400",
             )}
           >
             <Settings className="w-6 h-6 mb-1" />
             <span className="text-[10px] font-medium">Pengaturan</span>
           </button>
-        </div>
-
-        {/* iOS Home Indicator mock for styling */}
-        <div className="absolute bottom-1 w-full flex justify-center pb-1">
-          <div className="w-1/3 h-1 bg-gray-900 rounded-full"></div>
         </div>
       </div>
     </div>
