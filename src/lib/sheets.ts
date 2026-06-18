@@ -165,5 +165,16 @@ export async function markAttendance(
 
   localStorage.setItem(STORAGE_KEY_KEHADIRAN, JSON.stringify(kehadiranData));
 
+  const pesertaData: ParticipantInfo[] = JSON.parse(
+    localStorage.getItem(STORAGE_KEY_PESERTA) || "[]",
+  );
+  const updatedPesertaData = pesertaData.map((p) => {
+    if (p.id === participantId) {
+      return { ...p, status: "Hadir" };
+    }
+    return p;
+  });
+  localStorage.setItem(STORAGE_KEY_PESERTA, JSON.stringify(updatedPesertaData));
+
   return { success: true };
 }

@@ -519,7 +519,7 @@ export default function App() {
     });
 
     const handleShareWhatsApp = async (p: ParticipantInfo) => {
-      const text = `Halo, ini adalah akses peserta untuk Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSilakan simpan QR Code ini dan tunjukkan saat kehadiran.`;
+      const text = `Halo, ini adalah akses peserta untuk 2026 Annual Meeting.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSilakan simpan QR Code ini dan tunjukkan saat kehadiran.`;
       
       try {
         const dataUrl = await generateQRImageWithText(p);
@@ -806,7 +806,7 @@ export default function App() {
     );
 
     const handleShareWhatsApp = async (p: ParticipantInfo) => {
-      const text = `Halo, terima kasih telah hadir di Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSemoga acara berjalan lancar dan bermanfaat bagi Anda.`;
+      const text = `Halo, terima kasih telah hadir di 2026 Annual Meeting.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSemoga acara berjalan lancar dan bermanfaat bagi Anda.`;
       
       try {
         const dataUrl = await generateQRImageWithText(p);
@@ -900,7 +900,7 @@ export default function App() {
     );
 
     const handleShareWhatsApp = async (p: ParticipantInfo) => {
-      const text = `Halo, mengingatkan Anda untuk menghadiri acara Meat Year Meeting 2026.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSampai jumpa di lokasi acara.`;
+      const text = `Halo, mengingatkan Anda untuk menghadiri acara 2026 Annual Meeting.\n\nNama: ${p.name}\nInstansi: ${p.instansi}\nID Peserta: ${p.id}\n\nSampai jumpa di lokasi acara.`;
       
       try {
         const dataUrl = await generateQRImageWithText(p);
@@ -1065,6 +1065,18 @@ function doPost(e) {
       var ws = sheet.getSheetByName(SHEET_NAME_KEHADIRAN) || sheet.insertSheet(SHEET_NAME_KEHADIRAN);
       if (ws.getLastRow() === 0) ws.appendRow(['ID_Peserta', 'Nama', 'Tanggal', 'Waktu Hadir']);
       ws.appendRow([payload.data.id, payload.data.name, payload.data.date, payload.data.time]);
+      
+      var pSheet = sheet.getSheetByName(SHEET_NAME_PESERTA);
+      if (pSheet) {
+        // Update status "Hadir" di sheet Peserta
+        var dataValues = pSheet.getDataRange().getValues();
+        for (var i = 1; i < dataValues.length; i++) {
+          if (dataValues[i][0] === payload.data.id) {
+            pSheet.getRange(i + 1, 4).setValue("Hadir");
+            break;
+          }
+        }
+      }
     }
   } catch(error) {
     output = { status: 'error', message: error.toString() };
@@ -1412,7 +1424,7 @@ function doGet(e) {
           {/* Meeting Info */}
           <div className="px-5 mb-3 mt-1">
             <h2 className="text-base font-bold text-gray-900 leading-tight">
-              Meat Year Meeting 2026
+              2026 Annual Meeting
             </h2>
             <p className="text-gray-500 text-xs mt-0.5 font-medium">
               Hotel Nusatu
