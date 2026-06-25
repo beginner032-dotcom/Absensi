@@ -33,6 +33,7 @@ import {
   CheckSquare,
   ArrowLeft,
   MessageCircle,
+  RotateCcw,
 } from "lucide-react";
 import {
   getOrCreateSpreadsheet,
@@ -40,6 +41,7 @@ import {
   ParticipantInfo,
   addParticipant,
   markAttendance,
+  generateMissingIds,
 } from "./lib/sheets";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -99,6 +101,8 @@ const playErrorBeep = () => {
   }
 };
 
+let stopScannerPromise: Promise<void> | null = null;
+
 const QrScanner = ({
   onScanSuccess,
   onScanError,
@@ -136,17 +140,23 @@ const QrScanner = ({
 
   useEffect(() => {
     let isMounted = true;
-    const scanner = new Html5Qrcode("reader");
+    let scanner: Html5Qrcode | null = null;
     let isScanning = false;
 
     const startScanner = async () => {
+      if (stopScannerPromise) {
+        await stopScannerPromise;
+      }
+      if (!isMounted) return;
+
+      scanner = new Html5Qrcode("reader");
       try {
         const cameraConfig = selectedCameraId
           ? selectedCameraId
           : { facingMode: "environment" };
         await scanner.start(
           cameraConfig,
-          { fps: 30, qrbox: { width: 250, height: 250 }, disableFlip: false },
+          { fps: 10, qrbox: { width: 250, height: 250 }, disableFlip: false },
           (decodedText) => {
             if (isMounted && onScanSuccessRef.current)
               onScanSuccessRef.current(decodedText);
@@ -170,17 +180,22 @@ const QrScanner = ({
 
     return () => {
       isMounted = false;
-      if (isScanning) {
-        scanner
+      if (scanner && isScanning) {
+        const stopIt = scanner
           .stop()
           .then(() => {
             try {
-              scanner.clear();
+              scanner?.clear();
             } catch (e) {
               // Ignore DOM removal errors if React already unmounted it
             }
           })
-          .catch(console.error);
+          .catch((e) => console.error(e));
+        stopScannerPromise = stopIt;
+      } else if (scanner) {
+        try {
+          scanner.clear();
+        } catch (e) {}
       }
     };
   }, [selectedCameraId]);
@@ -279,6 +294,12 @@ export default function App() {
   const [newName, setNewName] = useState("");
   const [newInstansi, setNewInstansi] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isGeneratingIds, setIsGeneratingIds] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetPrompt, setShowResetPrompt] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterHadir, setFilterHadir] = useState<"Semua" | "Hadir" | "BelumHadir">("Semua");
 
@@ -298,6 +319,27 @@ export default function App() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleResetAttendance = async () => {
+    if (resetPassword !== "010203") {
+      setResetError("Password salah!");
+      return;
+    }
+    setResetError("");
+    try {
+      setIsResetting(true);
+      const { resetAttendance } = await import("./lib/sheets");
+      await resetAttendance();
+      await loadData();
+      setShowResetPrompt(false);
+      setResetPassword("");
+    } catch (err) {
+      console.error("Failed to reset attendance:", err);
+      setResetError("Terjadi kesalahan, coba lagi.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -333,10 +375,22 @@ export default function App() {
     }
   };
 
+  const handleGenerateMissingIds = async () => {
+    try {
+      setIsGeneratingIds(true);
+      await generateMissingIds();
+      await loadData();
+    } catch (err) {
+      console.error("Failed to generate missing IDs:", err);
+    } finally {
+      setIsGeneratingIds(false);
+    }
+  };
+
   const handleScan = async (decodedText: string) => {
     const now = Date.now();
-    // Prevent multiple scans within 3 seconds
-    if (isMarking || scanResult || now - lastScannedTime.current < 3000) return;
+    // Prevent multiple scans within 1.5 seconds
+    if (isMarking || scanResult || now - lastScannedTime.current < 1500) return;
 
     lastScannedTime.current = now;
     const participantId = decodedText.trim();
@@ -347,14 +401,7 @@ export default function App() {
     if (!participant) {
       setScanError(`ID Peserta "${participantId}" tidak terdaftar.`);
       playErrorBeep();
-      setTimeout(() => setScanError(null), 3000);
-      return;
-    }
-
-    if (participant.status === "Hadir") {
-      setScanError(`${participant.name} sudah melakukan presensi.`);
-      playErrorBeep();
-      setTimeout(() => setScanError(null), 3000);
+      setTimeout(() => setScanError(null), 1500);
       return;
     }
 
@@ -379,13 +426,13 @@ export default function App() {
 
         setTimeout(() => {
           setScanResult(null);
-        }, 3000);
+        }, 1500);
       }
     } catch (err) {
       console.error(err);
       setScanError("Gagal mencatat kehadiran");
       playErrorBeep();
-      setTimeout(() => setScanError(null), 3000);
+      setTimeout(() => setScanError(null), 1500);
     }
   };
 
@@ -557,12 +604,22 @@ export default function App() {
                 </button>
                 <h1 className="text-xl font-bold">Daftar Peserta</h1>
               </div>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 transition-colors shadow-sm"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleGenerateMissingIds}
+                  disabled={isGeneratingIds}
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-full p-2.5 transition-colors shadow-sm flex items-center justify-center"
+                  title="Generate ID Peserta yang Kosong"
+                >
+                  <RefreshCw className={cn("w-5 h-5", isGeneratingIds && "animate-spin")} />
+                </button>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 transition-colors shadow-sm flex items-center justify-center"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="relative">
@@ -1077,6 +1134,45 @@ function doPost(e) {
           }
         }
       }
+    } else if (payload.action === 'generateMissingIds') {
+      var pSheet = sheet.getSheetByName(SHEET_NAME_PESERTA);
+      if (pSheet && pSheet.getLastRow() > 1) {
+        var dataRange = pSheet.getRange(2, 1, pSheet.getLastRow() - 1, 4);
+        var dataValues = dataRange.getValues();
+        var updated = false;
+        for (var i = 0; i < dataValues.length; i++) {
+          if (!dataValues[i][0]) {
+            var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            var newId = 'P-';
+            for (var j = 0; j < 6; j++) {
+              newId += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            dataValues[i][0] = newId;
+            if (!dataValues[i][3]) {
+              dataValues[i][3] = 'Belum';
+            }
+            updated = true;
+          }
+        }
+        if (updated) {
+          dataRange.setValues(dataValues);
+        }
+      }
+    } else if (payload.action === 'resetAttendance') {
+      var kSheet = sheet.getSheetByName(SHEET_NAME_KEHADIRAN);
+      if (kSheet) {
+        kSheet.clear();
+        kSheet.appendRow(['ID_Peserta', 'Nama', 'Tanggal', 'Waktu Hadir']);
+      }
+      var pSheet = sheet.getSheetByName(SHEET_NAME_PESERTA);
+      if (pSheet && pSheet.getLastRow() > 1) {
+        var dataRange = pSheet.getRange(2, 4, pSheet.getLastRow() - 1, 1);
+        var values = dataRange.getValues();
+        for (var i = 0; i < values.length; i++) {
+            values[i][0] = 'Belum';
+        }
+        dataRange.setValues(values);
+      }
     }
   } catch(error) {
     output = { status: 'error', message: error.toString() };
@@ -1222,6 +1318,16 @@ function doGet(e) {
             </div>
 
             <button
+              onClick={() => setShowResetPrompt(true)}
+              className="w-full mb-3 bg-red-50 p-4 rounded-2xl border border-red-100 shadow-sm flex items-center justify-center space-x-2 text-red-600 hover:bg-red-100 transition-colors"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span className="font-semibold text-sm">
+                Reset Kehadiran
+              </span>
+            </button>
+
+            <button
               onClick={() => {
                 if (
                   confirm(
@@ -1240,6 +1346,44 @@ function doGet(e) {
               </span>
             </button>
           </div>
+
+          {showResetPrompt && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl w-full max-w-sm p-6 relative animate-in fade-in zoom-in-95 duration-200 shadow-xl">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Konfirmasi Reset Kehadiran</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Masukkan password untuk mereset seluruh data kehadiran menjadi Belum Hadir. Aksi ini tidak dapat dibatalkan.
+                </p>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none mb-2"
+                />
+                {resetError && <p className="text-xs text-red-600 font-medium mb-3">{resetError}</p>}
+                <div className="flex space-x-3 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowResetPrompt(false);
+                      setResetPassword("");
+                      setResetError("");
+                    }}
+                    className="flex-1 bg-gray-100 text-gray-700 font-semibold py-2 rounded-xl text-sm hover:bg-gray-200 transition"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleResetAttendance}
+                    disabled={isResetting || !resetPassword}
+                    className="flex-1 bg-red-600 text-white font-semibold py-2 rounded-xl text-sm hover:bg-red-700 transition disabled:opacity-50"
+                  >
+                    {isResetting ? "Mereset..." : "Reset"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

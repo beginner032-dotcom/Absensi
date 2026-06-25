@@ -50,8 +50,8 @@ export async function fetchSummary(
       return data;
     } catch (e) {
       console.error("Gagal mengambil data dari Spreadsheet", e);
-      // fallback to empty
-      return { total: 0, present: 0, absent: 0, percentage: 0, participants: [] };
+      // If fetching from script URL fails (e.g. CORS, offline, or invalid URL),
+      // we will fall through to local storage instead of returning empty arrays.
     }
   }
 
@@ -101,15 +101,19 @@ export async function addParticipant(
 
   const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
   if (scriptUrl) {
-    await fetch(scriptUrl, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "addParticipant",
-        data: { id, name, instansi }
-      })
-      // Avoid content-type header to prevent CORS preflight
-    });
-    return { success: true };
+    try {
+      await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "addParticipant",
+          data: { id, name, instansi }
+        })
+        // Avoid content-type header to prevent CORS preflight
+      });
+      return { success: true };
+    } catch (e) {
+      console.error("Gagal menambah ke Spreadsheet, mencoba local storage", e);
+    }
   }
 
   const pesertaData: ParticipantInfo[] = JSON.parse(
@@ -136,15 +140,19 @@ export async function markAttendance(
 
   const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
   if (scriptUrl) {
-    const res = await fetch(scriptUrl, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "markAttendance",
-        data: { id: participantId, name: participantName, date, time }
-      })
-    });
-    const result = await res.json();
-    return result;
+    try {
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "markAttendance",
+          data: { id: participantId, name: participantName, date, time }
+        })
+      });
+      const result = await res.json();
+      return result;
+    } catch (e) {
+      console.error("Gagal update ke Spreadsheet, mencoba local storage", e);
+    }
   }
 
   const kehadiranData: KehadiranRecord[] = JSON.parse(
@@ -176,5 +184,53 @@ export async function markAttendance(
   });
   localStorage.setItem(STORAGE_KEY_PESERTA, JSON.stringify(updatedPesertaData));
 
+  return { success: true };
+}
+
+export async function generateMissingIds(): Promise<any> {
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    try {
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "generateMissingIds"
+        })
+      });
+      const result = await res.json();
+      return result;
+    } catch (e) {
+      console.error("Gagal generate di Spreadsheet", e);
+    }
+  }
+  return { success: true };
+}
+
+export async function resetAttendance(): Promise<any> {
+  const scriptUrl = localStorage.getItem("APPS_SCRIPT_URL") || DEFAULT_APPS_SCRIPT_URL;
+  if (scriptUrl) {
+    try {
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "resetAttendance"
+        })
+      });
+      return await res.json();
+    } catch (e) {
+      console.error("Gagal reset di Spreadsheet, mencoba local storage", e);
+    }
+  }
+  
+  // Local storage fallback
+  localStorage.removeItem(STORAGE_KEY_KEHADIRAN);
+  
+  const pesertaStr = localStorage.getItem(STORAGE_KEY_PESERTA);
+  if (pesertaStr) {
+    let pesertaData = JSON.parse(pesertaStr);
+    pesertaData = pesertaData.map((p: any) => ({ ...p, status: "Belum" }));
+    localStorage.setItem(STORAGE_KEY_PESERTA, JSON.stringify(pesertaData));
+  }
+  
   return { success: true };
 }
